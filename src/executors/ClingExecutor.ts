@@ -30,6 +30,9 @@ export default abstract class ClingExecutor extends NonInteractiveCodeExecutor {
 		// Run code without a main block (cling only)
 		return new Promise<void>((resolve, reject) => {
 			const childArgs = args.split(" ").filter(arg => arg.length > 0);
+			if (!childArgs.includes("--nologo")) {
+				childArgs.push("--nologo");
+			}
 			
 			let cmd = this.settings.clingPath;
 			if (this.settings.wslMode) {
