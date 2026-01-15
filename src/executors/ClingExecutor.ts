@@ -29,11 +29,21 @@ export default abstract class ClingExecutor extends NonInteractiveCodeExecutor {
 
 		// Run code without a main block (cling only)
 		return new Promise<void>((resolve, reject) => {
-			const childArgs = [...args.split(" ").filter(arg => arg.length > 0), ...codeBlockContent.split("\n")];
-			const child = child_process.spawn(this.settings.clingPath, childArgs, {env: process.env, shell: this.usesShell});
+			const childArgs = args.split(" ").filter(arg => arg.length > 0);
+			
+			let cmd = this.settings.clingPath;
+			if (this.settings.wslMode) {
+				childArgs.unshift("-e", cmd);
+				cmd = "wsl";
+			}
+
+			const child = child_process.spawn(cmd, childArgs, {env: process.env, shell: this.usesShell});
 			// Set resolve callback to resolve the promise in the child_process.on('close', ...) listener from super.handleChildOutput
 			this.resolveRun = resolve;
 			this.handleChildOutput(child, outputter, this.tempFileId);
+
+			child.stdin.write(codeBlockContent);
+			child.stdin.end();
 		});
 	}
 
